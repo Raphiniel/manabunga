@@ -1,0 +1,51 @@
+/**
+ * Header component styles for Rider34 admin panel
+ * Location: web-admin/src/components/Header.css
+ */
+
+.header {
+  height: 70px;
+  background-color: white;
+  border-bottom: 1px solid #e9ecef;
+  position: fixed;
+  top: 0;
+  left: 250px;
+  right: 0;
+  z-index: 100;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 100%;
+  padding: 0 20px;
+}
+
+.header-left h1 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #2D3436;
+  margin: 0;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-name {
+  color: #6c757d;
+  font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  .header {
+    left: 70px;
+  }
+  
+  .user-name {
+    display: none;
+  }
+}
