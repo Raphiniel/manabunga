@@ -4,6 +4,7 @@
  */
 
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom' // Add this import
 import { useAuth } from '../contexts/AuthContext'
 import './Login.css'
 
@@ -14,6 +15,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false)
   
   const { login } = useAuth()
+  const navigate = useNavigate() // Add this hook
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -26,13 +28,20 @@ const Login = () => {
     setIsLoading(true)
     setError('')
     
-    const result = await login(username, password)
-    
-    if (!result.success) {
-      setError(result.error)
+    try {
+      const result = await login(username, password)
+      
+      if (result.success) {
+        // Redirect to dashboard on successful login
+        navigate('/') // This will go to the protected route that renders Dashboard
+      } else {
+        setError(result.error)
+      }
+    } catch (error) {
+      setError('An unexpected error occurred')
+    } finally {
+      setIsLoading(false)
     }
-    
-    setIsLoading(false)
   }
 
   return (

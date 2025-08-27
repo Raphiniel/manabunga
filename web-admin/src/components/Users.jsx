@@ -29,17 +29,42 @@ const Users = () => {
     try {
       setIsLoading(true)
       const response = await axios.get('/api/auth/users/')
-      setUsers(response.data)
+      
+      // Handle different possible response structures
+      let usersData = response.data;
+      
+      // If response.data is an object but not an array, check for common properties
+      if (usersData && typeof usersData === 'object' && !Array.isArray(usersData)) {
+        // Try different possible structures
+        if (Array.isArray(usersData.results)) {
+          usersData = usersData.results; // Django REST framework pagination
+        } else if (Array.isArray(usersData.data)) {
+          usersData = usersData.data; // Common API wrapper
+        } else if (Array.isArray(usersData.users)) {
+          usersData = usersData.users; // Another common pattern
+        }
+      }
+      
+      // Ensure we have an array, otherwise set to empty array
+      if (!Array.isArray(usersData)) {
+        console.error('Users API did not return an array:', usersData);
+        setUsers([]);
+        setError('Invalid users data format received');
+      } else {
+        setUsers(usersData);
+      }
     } catch (error) {
       console.error('Failed to fetch users:', error)
       setError('Failed to load users')
+      setUsers([])
     } finally {
       setIsLoading(false)
     }
   }
 
   const filterUsers = () => {
-    let filtered = users
+    // Ensure users is always treated as an array
+    let filtered = Array.isArray(users) ? users : [];
 
     // Filter by user type
     if (userTypeFilter !== 'all') {
@@ -50,11 +75,11 @@ const Users = () => {
     if (searchTerm) {
       const term = searchTerm.toLowerCase()
       filtered = filtered.filter(user => 
-        user.username.toLowerCase().includes(term) ||
-        user.email.toLowerCase().includes(term) ||
-        user.phone_number.toLowerCase().includes(term) ||
-        user.first_name.toLowerCase().includes(term) ||
-        user.last_name.toLowerCase().includes(term)
+        user.username?.toLowerCase().includes(term) ||
+        user.email?.toLowerCase().includes(term) ||
+        user.phone_number?.toLowerCase().includes(term) ||
+        user.first_name?.toLowerCase().includes(term) ||
+        user.last_name?.toLowerCase().includes(term)
       )
     }
 

@@ -28,18 +28,43 @@ const Payments = () => {
   const fetchPayments = async () => {
     try {
       setIsLoading(true)
-      const response = await axios.get('/api/payments/')
-      setPayments(response.data)
+      const response = await axios.get('http://localhost:8000/api/payments/')
+      
+      // Handle different possible response structures
+      let paymentsData = response.data;
+      
+      // If response.data is an object but not an array, check for common properties
+      if (paymentsData && typeof paymentsData === 'object' && !Array.isArray(paymentsData)) {
+        // Try different possible structures
+        if (Array.isArray(paymentsData.results)) {
+          paymentsData = paymentsData.results; // Django REST framework pagination
+        } else if (Array.isArray(paymentsData.data)) {
+          paymentsData = paymentsData.data; // Common API wrapper
+        } else if (Array.isArray(paymentsData.payments)) {
+          paymentsData = paymentsData.payments; // Another common pattern
+        }
+      }
+      
+      // Ensure we have an array, otherwise set to empty array
+      if (!Array.isArray(paymentsData)) {
+        console.error('Payments API did not return an array:', paymentsData);
+        setPayments([]);
+        setError('Invalid payments data format received');
+      } else {
+        setPayments(paymentsData);
+      }
     } catch (error) {
       console.error('Failed to fetch payments:', error)
       setError('Failed to load payments')
+      setPayments([])
     } finally {
       setIsLoading(false)
     }
   }
 
   const filterPayments = () => {
-    let filtered = payments
+    // Ensure payments is always treated as an array
+    let filtered = Array.isArray(payments) ? payments : [];
 
     // Filter by status
     if (statusFilter !== 'all') {
@@ -54,6 +79,7 @@ const Payments = () => {
     setFilteredPayments(filtered)
   }
 
+  // Rest of the component remains the same...
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-ZW', {
       style: 'currency',

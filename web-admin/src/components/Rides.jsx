@@ -28,20 +28,47 @@ const Rides = () => {
     try {
       setIsLoading(true)
       const response = await axios.get('/api/rides/')
-      setRides(response.data)
+      
+      // Handle different possible response structures
+      let ridesData = response.data;
+      
+      // If response.data is an object but not an array, check for common properties
+      if (ridesData && typeof ridesData === 'object' && !Array.isArray(ridesData)) {
+        // Try different possible structures
+        if (Array.isArray(ridesData.results)) {
+          ridesData = ridesData.results; // Django REST framework pagination
+        } else if (Array.isArray(ridesData.data)) {
+          ridesData = ridesData.data; // Common API wrapper
+        } else if (Array.isArray(ridesData.rides)) {
+          ridesData = ridesData.rides; // Another common pattern
+        }
+      }
+      
+      // Ensure we have an array, otherwise set to empty array
+      if (!Array.isArray(ridesData)) {
+        console.error('Rides API did not return an array:', ridesData);
+        setRides([]);
+        setError('Invalid rides data format received');
+      } else {
+        setRides(ridesData);
+      }
     } catch (error) {
       console.error('Failed to fetch rides:', error)
       setError('Failed to load rides')
+      setRides([])
     } finally {
       setIsLoading(false)
     }
   }
 
   const filterRides = () => {
+    // Ensure rides is always treated as an array
+    let filtered = Array.isArray(rides) ? rides : [];
+    
     if (statusFilter === 'all') {
-      setFilteredRides(rides)
+      setFilteredRides(filtered)
     } else {
-      setFilteredRides(rides.filter(ride => ride.status === statusFilter))
+      setFilteredRides(filtered.filter(ride => ride.status === statusFilter))
     }
   }
 
